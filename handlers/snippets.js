@@ -12,6 +12,7 @@ exports.getAllSnippets = (req, res) => {
           snippetId: doc.id,
           body: doc.data().body,
           audio: doc.data().audio,
+          genre: doc.data().genre,
           playCount: doc.data().playCount,
           userHandle: doc.data().userHandle,
           createdAt: doc.data().createdAt,
@@ -28,11 +29,11 @@ exports.getAllSnippets = (req, res) => {
 // Post one snippet
 exports.postOneSnippet = (req, res) => {
   if (req.body.body.trim() === "") {
-    return res.status(400).json({ body: "Body must not be empty" });
+    return res.status(400).json({ error: "Please write a short message" });  
   }
 
   if (!req.body.audio) {
-    return res.status(400).json({ body: "Must upload audio" });
+    return res.status(400).json({ error: "Please upload your audio" });
   }
 
   const newSnippet = {
@@ -40,6 +41,7 @@ exports.postOneSnippet = (req, res) => {
     userHandle: req.user.handle,
     userImage: req.user.imageUrl,
     audio: req.body.audio,
+    genre: req.body.genre,
     playCount: 0,
     createdAt: new Date().toISOString(),
     likeCount: 0,
