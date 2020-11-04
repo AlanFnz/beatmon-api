@@ -295,8 +295,3 @@ exports.deleteSnippet = (req, res) => {
       return res.status(500).json({ error: err.code });
     });
 };
-
-// Play one Snippet
-exports.playCount = (req, res) => {
-  
-}
