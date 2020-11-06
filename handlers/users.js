@@ -127,6 +127,9 @@ exports.getUserDetails = (req, res) => {
       data.forEach(doc => {
         userData.snippets.push({
           body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
           createdAt: doc.data().createdAt,
           userHandle: doc.data().userHandle,
           userImage: doc.data().userImage,
