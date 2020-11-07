@@ -6,6 +6,8 @@ const cors = require('cors');
 
 const {
   getAllSnippets,
+  getSnippetsFirst,
+  getSnippetsNext,
   postOneSnippet,
   getSnippet,
   commentOnSnippet,
@@ -31,6 +33,8 @@ app.use(cors());
 
 // Snippet routes
 app.get('/snippets', getAllSnippets);
+app.post('/snippets/first', getSnippetsFirst);
+app.post('/snippets/next', getSnippetsNext);
 app.post('/snippet', FBAuth, postOneSnippet);
 app.get('/snippet/:snippetId', getSnippet);
 app.delete('/snippet/:snippetId', FBAuth, deleteSnippet);

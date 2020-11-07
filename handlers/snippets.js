@@ -1,9 +1,9 @@
-const { db } = require("../util/admin");
+const { db } = require('../util/admin');
 
 // Get all snippets
 exports.getAllSnippets = (req, res) => {
-  db.collection("snippets")
-    .orderBy("createdAt", "desc")
+  db.collection('snippets')
+    .orderBy('createdAt', 'desc')
     .get()
     .then((data) => {
       let snippets = [];
@@ -26,14 +26,78 @@ exports.getAllSnippets = (req, res) => {
     .catch((err) => console.error(err));
 };
 
+// Get with pagination first query
+exports.getSnippetsFirst = async (req, res) => {
+  let lastSnippet;
+  await db.collection('snippets')
+    .orderBy('createdAt', 'asc')
+    .limit(1)
+    .get()
+    .then((data) => { lastSnippet = data.docs[data.docs.length-1] });
+  db.collection('snippets')
+    .orderBy('createdAt', 'desc')
+    .limit(5)
+    .get()
+    .then((data) => {
+      let snippets = [];
+      let lastVisible = data.docs[data.docs.length-1];
+      data.forEach((doc) => {
+        snippets.push({
+          snippetId: doc.id,
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          userHandle: doc.data().userHandle,
+          createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
+        });
+      });
+      return res.json({snippets, lastVisible, lastSnippet});
+    })
+    .catch((err) => console.error(err));
+};
+
+// Get with pagination subsequent query
+exports.getSnippetsNext = (req, res) => {
+  db.collection('snippets')
+    .orderBy('createdAt', 'desc')
+    .startAfter(req.body._fieldsProto.createdAt.stringValue)
+    .limit(5)
+    .get()
+    .then((data) => {
+      let lastVisible = data.docs[data.docs.length-1];
+      console.log(lastVisible);
+      let snippets = [];
+      data.forEach((doc) => {
+        snippets.push({
+          snippetId: doc.id,
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          userHandle: doc.data().userHandle,
+          createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
+        });
+      });
+      return res.json({snippets, lastVisible});
+    })
+    .catch((err) => console.error(err));
+};
+
 // Post one snippet
 exports.postOneSnippet = (req, res) => {
-  if (req.body.body.trim() === "") {
-    return res.status(400).json({ error: "Please write a short message" });  
+  if (req.body.body.trim() === '') {
+    return res.status(400).json({ error: 'Please write a short message' });  
   }
 
   if (!req.body.audio) {
-    return res.status(400).json({ error: "Please upload your audio" });
+    return res.status(400).json({ error: 'Please upload your audio' });
   }
 
   const newSnippet = {
@@ -48,7 +112,7 @@ exports.postOneSnippet = (req, res) => {
     commentCount: 0
   };
 
-  db.collection("snippets")
+  db.collection('snippets')
     .add(newSnippet)
     .then((doc) => {
       const resSnippet = newSnippet;
@@ -56,7 +120,7 @@ exports.postOneSnippet = (req, res) => {
       res.json(resSnippet);
     })
     .catch((err) => {
-      res.status(500).json({ error: "Something went wrong" });
+      res.status(500).json({ error: 'Something went wrong' });
       console.error(err);
     });
 };
@@ -68,14 +132,14 @@ exports.getSnippet = (req, res) => {
     .get()
     .then((doc) => {
       if (!doc.exists) {
-        return res.status(404).json({ error: "Snippet not found" });
+        return res.status(404).json({ error: 'Snippet not found' });
       }
       snippetData = doc.data();
       snippetData.snippetId = doc.id;
       return db
-        .collection("comments")
+        .collection('comments')
         .orderBy('createdAt', 'desc')
-        .where("snippetId", "==", req.params.snippetId)
+        .where('snippetId', '==', req.params.snippetId)
         .get();
     })
     .then((data) => {
