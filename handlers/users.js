@@ -108,15 +108,115 @@ exports.addUserDetails = (req, res) => {
   })
 };
 
-// Get any user's details
+// NEW VERSION
+// Get any user data and snippets. First query
 exports.getUserDetails = (req, res) => {
+  let lastUserSnippet = {};
+  let userData = {};
+  db.doc(`/users/${req.params.handle}`).get()
+    .then (async doc =>  {
+      if(doc.exists){
+        userData.user = doc.data();
+        await db.collection('snippets')
+          .where('userHandle', '==', req.params.handle)
+          .orderBy('createdAt', 'asc')
+          .limit(1)
+          .get()
+          .then((data) => { 
+            console.log(data);
+            console.log(req.params.handle);
+            lastUserSnippet = data.docs[data.docs.length-1] 
+          })
+        return db.collection('snippets')
+          .where('userHandle', '==', req.params.handle)
+          .orderBy('createdAt', 'desc')
+          .limit(3)
+          .get()
+        } else {
+          return res.status(404).json({ error: 'User not found'});
+        }
+    })
+    .then(data => {
+      userData.snippets = [];
+      let lastVisible = data.docs[data.docs.length-1]
+      data.forEach(doc => {
+        userData.snippets.push({
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          createdAt: doc.data().createdAt,
+          userHandle: doc.data().userHandle,
+          userImage: doc.data().userImage,
+          likeCount: doc.data().likeCount,
+          commentCount: doc.data().commentCount,
+          snippetId: doc.id
+        })
+      });
+      return res.json({ userData, lastVisible, lastUserSnippet });
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code })
+    });
+};
+
+// Get more snippets from one user
+exports.getUserSnippetsNext = (req, res) => {
+  db.collection('snippets')
+    .where('userHandle', '==', req.params.handle)
+    .orderBy('createdAt', 'desc')
+    .startAfter(req.body._fieldsProto.createdAt.stringValue)
+    .limit(3)
+    .get()
+    .then((data) => {
+      let lastVisible = data.docs[data.docs.length-1];
+      let userData = { snippets: [] };
+      data.forEach((doc) => {
+        userData.snippets.push({
+          snippetId: doc.id,
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          userHandle: doc.data().userHandle,
+          createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
+        });
+      });
+      return res.json({userData, lastVisible});
+    })
+    .catch((err) => console.error(err));
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getMoreSnippetsFromUser = (req, res) => {
   let userData = {};
   db.doc(`/users/${req.params.handle}`).get()
     .then(doc => {
       if(doc.exists){
         userData.user = doc.data();
-        return db.collection('snippets').where('userHandle', '==', req.params.handle)
+        return db.collection('snippets')
+          .where('userHandle', '==', req.params.handle)
           .orderBy('createdAt', 'desc')
+          .limit(1)
           .get()
       } else {
         return res.status(404).json({ error: 'User not found'});

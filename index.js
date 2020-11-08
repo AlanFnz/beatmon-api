@@ -25,6 +25,7 @@ const {
   addUserDetails,
   getAuthenticatedUser,
   getUserDetails,
+  getUserSnippetsNext,
   markNotificationsRead
 } = require('./handlers/users');
 
@@ -51,6 +52,7 @@ app.post('/user/image', FBAuth, uploadImage);
 app.post('/user', FBAuth, addUserDetails);
 app.get('/user', FBAuth, getAuthenticatedUser);
 app.get('/user/:handle', getUserDetails);
+app.post('/user/:handle/next', getUserSnippetsNext);
 app.post('/notifications', FBAuth, markNotificationsRead);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);

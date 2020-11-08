@@ -33,7 +33,10 @@ exports.getSnippetsFirst = async (req, res) => {
     .orderBy('createdAt', 'asc')
     .limit(1)
     .get()
-    .then((data) => { lastSnippet = data.docs[data.docs.length-1] });
+    .then((data) => { 
+      console.log(data)
+      lastSnippet = data.docs[data.docs.length-1]
+     });
   db.collection('snippets')
     .orderBy('createdAt', 'desc')
     .limit(5)
@@ -69,7 +72,6 @@ exports.getSnippetsNext = (req, res) => {
     .get()
     .then((data) => {
       let lastVisible = data.docs[data.docs.length-1];
-      console.log(lastVisible);
       let snippets = [];
       data.forEach((doc) => {
         snippets.push({
