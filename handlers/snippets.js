@@ -26,7 +26,7 @@ exports.getAllSnippets = (req, res) => {
     .catch((err) => console.error(err));
 };
 
-// Get with pagination first query
+// Get snippets with pagination first query
 exports.getSnippetsFirst = async (req, res) => {
   let lastSnippet;
   await db.collection('snippets')
@@ -34,7 +34,6 @@ exports.getSnippetsFirst = async (req, res) => {
     .limit(1)
     .get()
     .then((data) => { 
-      console.log(data)
       lastSnippet = data.docs[data.docs.length-1]
      });
   db.collection('snippets')
@@ -63,7 +62,7 @@ exports.getSnippetsFirst = async (req, res) => {
     .catch((err) => console.error(err));
 };
 
-// Get with pagination subsequent query
+// Get snippets with pagination subsequent query
 exports.getSnippetsNext = (req, res) => {
   db.collection('snippets')
     .orderBy('createdAt', 'desc')
@@ -90,6 +89,104 @@ exports.getSnippetsNext = (req, res) => {
       return res.json({snippets, lastVisible});
     })
     .catch((err) => console.error(err));
+};
+
+// Get snippets by genre with pagination first query
+exports.getSnippetsByGenre = async (req, res) => {
+  let lastSnippet;
+  await db.collection('snippets')
+    .where('genre', '==', req.params.genre)
+    .orderBy('createdAt', 'asc')
+    .limit(1)
+    .get()
+    .then((data) => { 
+      lastSnippet = data.docs[data.docs.length-1]
+     });
+  db.collection('snippets')
+    .where('genre', '==', req.params.genre)
+    .orderBy('createdAt', 'desc')
+    .limit(3)
+    .get()
+    .then((data) => {
+      let snippets = [];
+      let lastVisible = data.docs[data.docs.length-1];
+      data.forEach((doc) => {
+        snippets.push({
+          snippetId: doc.id,
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          userHandle: doc.data().userHandle,
+          createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
+        });
+      });
+      return res.json({snippets, lastVisible, lastSnippet});
+    })
+    .catch((err) => console.error(err));
+};
+
+// Get snippets by genre with pagination subsequent query
+exports.getSnippetsByGenreNext = (req, res) => {
+  db.collection('snippets')
+    .where('genre', '==', req.params.genre)
+    .orderBy('createdAt', 'desc')
+    .startAfter(req.body._fieldsProto.createdAt.stringValue)
+    .limit(3)
+    .get()
+    .then((data) => {
+      let lastVisible = data.docs[data.docs.length-1];
+      let snippets = [];
+      data.forEach((doc) => {
+        snippets.push({
+          snippetId: doc.id,
+          body: doc.data().body,
+          audio: doc.data().audio,
+          genre: doc.data().genre,
+          playCount: doc.data().playCount,
+          userHandle: doc.data().userHandle,
+          createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
+        });
+      });
+      return res.json({snippets, lastVisible});
+    })
+    .catch((err) => console.error(err));
+};
+
+// Get one snippet
+exports.getSnippet = (req, res) => {
+  let snippetData = {};
+  db.doc(`/snippets/${req.params.snippetId}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'Snippet not found' });
+      }
+      snippetData = doc.data();
+      snippetData.snippetId = doc.id;
+      return db
+        .collection('comments')
+        .orderBy('createdAt', 'desc')
+        .where('snippetId', '==', req.params.snippetId)
+        .get();
+    })
+    .then((data) => {
+      snippetData.comments = [];
+      data.forEach((doc) => {
+        snippetData.comments.push(doc.data());
+      });
+      return res.json(snippetData);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err.code });
+    });
 };
 
 // Post one snippet
@@ -124,36 +221,6 @@ exports.postOneSnippet = (req, res) => {
     .catch((err) => {
       res.status(500).json({ error: 'Something went wrong' });
       console.error(err);
-    });
-};
-
-// Get one snippet
-exports.getSnippet = (req, res) => {
-  let snippetData = {};
-  db.doc(`/snippets/${req.params.snippetId}`)
-    .get()
-    .then((doc) => {
-      if (!doc.exists) {
-        return res.status(404).json({ error: 'Snippet not found' });
-      }
-      snippetData = doc.data();
-      snippetData.snippetId = doc.id;
-      return db
-        .collection('comments')
-        .orderBy('createdAt', 'desc')
-        .where('snippetId', '==', req.params.snippetId)
-        .get();
-    })
-    .then((data) => {
-      snippetData.comments = [];
-      data.forEach((doc) => {
-        snippetData.comments.push(doc.data());
-      });
-      return res.json(snippetData);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err.code });
     });
 };
 

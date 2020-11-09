@@ -8,6 +8,8 @@ const {
   getAllSnippets,
   getSnippetsFirst,
   getSnippetsNext,
+  getSnippetsByGenre,
+  getSnippetsByGenreNext,
   postOneSnippet,
   getSnippet,
   commentOnSnippet,
@@ -44,6 +46,8 @@ app.get('/snippet/:snippetId/playNotLogged', playSnippetNotLogged);
 app.get('/snippet/:snippetId/like', FBAuth, likeSnippet);
 app.get('/snippet/:snippetId/unlike', FBAuth, unlikeSnippet);
 app.post('/snippet/:snippetId/comment', FBAuth, commentOnSnippet);
+app.post('/:genre/first', getSnippetsByGenre);
+app.post('/:genre/next', getSnippetsByGenreNext);
 
 // Users routes
 app.post('/signup', signup);

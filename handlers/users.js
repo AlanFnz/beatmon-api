@@ -108,7 +108,6 @@ exports.addUserDetails = (req, res) => {
   })
 };
 
-// NEW VERSION
 // Get any user data and snippets. First query
 exports.getUserDetails = (req, res) => {
   let lastUserSnippet = {};
