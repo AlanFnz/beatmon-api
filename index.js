@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const express = require('express');
 const FBAuth = require('./util/fbAuth');
-const { db } = require('./util/admin');
+const { db, firebase } = require('./util/admin');
 const cors = require('cors');
 
 const {
@@ -30,6 +30,7 @@ const {
   getUserSnippetsNext,
   markNotificationsRead
 } = require('./handlers/users');
+const admin = require('./util/admin');
 
 const app = express();
 app.use(cors());
@@ -159,3 +160,14 @@ exports.onSnippetDelete = functions.region('europe-west1').firestore.document('s
     })
     .catch(err => console.error(err));
 })
+
+// Delete audio file on snippet delete
+exports.deleteAudioFile = functions.region('europe-west1').firestore.document('snippets/{snippetId}')
+.onDelete((snapshot, context) => {
+  const file = snapshot._fieldsProto.audioFileName.stringValue;
+  const bucket = firebase.storage().bucket();
+  console.log(file);
+  return bucket.deleteFiles({
+    prefix: `audio/${file}.mp3`
+  });
+});

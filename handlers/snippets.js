@@ -204,6 +204,7 @@ exports.postOneSnippet = (req, res) => {
     userHandle: req.user.handle,
     userImage: req.user.imageUrl,
     audio: req.body.audio,
+    audioFileName: req.body.audioFileName,
     genre: req.body.genre,
     playCount: 0,
     createdAt: new Date().toISOString(),
