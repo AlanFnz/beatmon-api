@@ -9,6 +9,10 @@ const isEmail = (email) => {
     if(string.trim() === '') return true;
     else return false;
   };
+
+  const hasWhiteSpace = (handle) => {
+    return handle.indexOf(' ') >= 0;
+  }
   
   exports.validateSignupData = data => {
 
@@ -23,6 +27,7 @@ const isEmail = (email) => {
     if(isEmpty(data.password)) errors.password = "Must not be empty";
     if(data.password !== data.confirmPassword) errors.confirmPassword = 'Passwords must match';
     if(isEmpty(data.handle)) errors.handle = "Must not be empty";
+    if(hasWhiteSpace(data.handle)) errors.handle = "White spaces not allowed";
 
     return {
         errors, 
