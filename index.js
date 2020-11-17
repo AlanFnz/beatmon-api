@@ -13,6 +13,7 @@ const {
   postOneSnippet,
   getSnippet,
   commentOnSnippet,
+  deleteComment,
   likeSnippet,
   unlikeSnippet,
   deleteSnippet,
@@ -42,6 +43,7 @@ app.post('/snippets/next', getSnippetsNext);
 app.post('/snippet', FBAuth, postOneSnippet);
 app.get('/snippet/:snippetId', getSnippet);
 app.delete('/snippet/:snippetId', FBAuth, deleteSnippet);
+app.delete('/snippet/comment/:commentId', FBAuth, deleteComment);
 app.get('/snippet/:snippetId/play', FBAuth, playSnippetLogged);
 app.get('/snippet/:snippetId/playNotLogged', playSnippetNotLogged);
 app.get('/snippet/:snippetId/like', FBAuth, likeSnippet);

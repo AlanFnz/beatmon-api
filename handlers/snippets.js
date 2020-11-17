@@ -179,7 +179,14 @@ exports.getSnippet = (req, res) => {
     .then((data) => {
       snippetData.comments = [];
       data.forEach((doc) => {
-        snippetData.comments.push(doc.data());
+        snippetData.comments.push({
+          commentId: doc.id,
+          body: doc.data().body,
+          createdAt: doc.data().createdAt,
+          snippetId: doc.data().snippetId,
+          userHandle: doc.data().userHandle,
+          userImage: doc.data().userImage,
+        });
       });
       return res.json(snippetData);
     })
@@ -247,8 +254,10 @@ exports.commentOnSnippet = (req, res) => {
     .then(() => {
       return db.collection('comments').add(newComment); 
     })
-    .then(() => {
-      res.json(newComment);
+    .then((doc) => {
+      const resComment = newComment;
+      resComment.commentId = doc.id;
+      res.json(resComment);
     })
     .catch(err => {
       console.log(err);
@@ -423,6 +432,42 @@ exports.deleteSnippet = (req, res) => {
     })
     .then(() => {
       res.json({ message: 'Snippet deleted succesfully'});
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
+// Delete a comment
+exports.deleteComment = (req, res) => {
+  const comment = db.doc(`/comments/${req.params.commentId}/`);
+  comment.get()
+    .then(doc => {
+      if(!doc.exists){
+        return res.status(404).json({ error: 'Comment not found'});
+      } else {
+        return doc.data().snippetId
+      }
+    })
+    .then(data => {
+      const snippetDocument = db.doc(`/snippets/${data}`)
+      snippetDocument.get()
+        .then(doc => {
+          if(doc.exists){
+            snippetData = doc.data();
+            snippetData.commentCount--;
+            return snippetDocument.update({ commentCount: snippetData.commentCount})
+          } else {
+            return res.status(404).json({ error: 'Snippet not found '})
+          }
+        })
+        .then(() => {
+          return comment.delete()
+        })
+    })
+    .then(() => {
+      res.json({ message: 'Comment deleted succesfully'});
     })
     .catch(err => {
       console.error(err);
