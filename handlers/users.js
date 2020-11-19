@@ -190,22 +190,6 @@ exports.getUserSnippetsNext = (req, res) => {
     .catch((err) => console.error(err));
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 exports.getMoreSnippetsFromUser = (req, res) => {
   let userData = {};
   db.doc(`/users/${req.params.handle}`).get()
